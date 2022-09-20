@@ -1,0 +1,25 @@
+{
+    "name": "fowlerwill/attribute-injection",
+    "description": "PHP Attribute based dependency injection",
+    "type": "library",
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "vimeo/psalm": "^4.27"
+    },
+    "autoload": {
+        "psr-4": {
+            "FowlerWill\\AttributeInjection\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FowlerWill\\AttributeInjection\\Test\\": "test/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Will",
+            "email": "fowlerwill@gmail.com"
+        }
+    ]
+}

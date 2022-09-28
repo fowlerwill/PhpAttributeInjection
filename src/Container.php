@@ -21,35 +21,39 @@ class Container
      * @template T
      * @psalm-param class-string<T> $className
      * @return T
-     * @throws \InvalidArgumentException
+     * @throws ContainerException
      */
     public function make(string $className)
     {
-        /** @var T */
+        /** @psalm-var T */
         $concrete = $this->instantiateClass($className);
 
-        foreach ($this->propertiesToInject($concrete::class) as $reflectedProperty) {
-            $this->setProperty($concrete, $reflectedProperty);
+        foreach ($this->propertiesToInject(get_class($concrete)) as $reflectedProperty) {
+            $propertyClassName = $this->getPropertyClassName($reflectedProperty);
+            
+            $concreteReflectionProperty = new \ReflectionProperty($concrete, $reflectedProperty->getName());
+            $concreteReflectionProperty->setAccessible(true);
+            $concreteReflectionProperty->setValue($concrete, $this->make($propertyClassName));
         }
 
         return $concrete;
     }
 
     /**
-     * @template T
-     * @psalm-param class-string<T> $className
-     * @return T
+     * @psalm-param class-string $className
      */
-    private function instantiateClass(string $className)
+    private function instantiateClass(string $className): object
     {
+        /** @psalm-suppress RedundantConditionGivenDocblockType */
         if (\class_exists($className)) {
-            return new $className;
+            return new $className();
         }
+
         if (\interface_exists($className) && \array_key_exists($className, $this->interfaceMap)) {
             return new $this->interfaceMap[$className]();
         }
         
-        throw new \InvalidArgumentException("Class \"$className\" does not exist.");
+        throw ContainerException::classNotExists($className);
     }
 
     /**
@@ -71,20 +75,22 @@ class Container
         return $properties;
     }
 
-    private function setProperty(object $concrete, \ReflectionProperty $reflectedProperty): void
+    /**
+     * @psalm-return class-string
+     */
+    private function getPropertyClassName(\ReflectionProperty $reflectedProperty): string
     {
-        
-        if (!$reflectedProperty->hasType() || !$reflectedProperty->getType() instanceof \ReflectionNamedType) {
-            throw new \InvalidArgumentException("Property {$reflectedProperty->getName()} requires a single named type.");
+        $name = $reflectedProperty->getName() ?: "UNKNOWN_PROPERTY";
+
+        if (!$reflectedProperty->hasType() ) {
+            throw ContainerException::propertyRequiresType($name);
         }
-
-        $dependencyClassName = $reflectedProperty->getType()->getName();
-
-        $concreteReflectionProperty = new \ReflectionProperty($concrete, $reflectedProperty->getName());
-        $concreteReflectionProperty->setAccessible(true);
-        /**
-         * @psalm-suppress ArgumentTypeCoercion
-         */
-        $concreteReflectionProperty->setValue($concrete, $this->make($dependencyClassName));
+        
+        if (!$reflectedProperty->getType() instanceof \ReflectionNamedType) {
+            throw ContainerException::propertyRequiresSingleType($name);
+        }
+        
+        /** @psalm-var class-string */
+        return $reflectedProperty->getType()->getName();
     }
 }

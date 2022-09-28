@@ -26,6 +26,7 @@
         }
     ],
     "scripts": {
+        "test": "./vendor/bin/phpunit test",
         "test-docker": "docker build -t attr-injection . && docker run -it --rm --name attr-injection-app attr-injection "
     }
 }

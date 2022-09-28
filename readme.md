@@ -1,5 +1,10 @@
 # PHP Attribute-based Injection
 
+Sounds exciting, doesn't it?! Well this is aimed to be a simple container that
+can _help_ you prevent dependency-hell.
+
+## Getting started.
+
 
 ## Contributing
 
@@ -9,7 +14,12 @@ composer install
 ```
 
 ### Testing
-To run the tests:
+To run the tests locally:
 ```sh
-./vendor/bin/phpunit test
+composer run test
+```
+
+To run the tests on docker, with coverage report:
+```sh
+$ composer run test-docker
 ```

@@ -1,5 +1,6 @@
 {
     "name": "fowlerwill/attribute-injection",
+    "version": "0.1.0-alpha",
     "description": "PHP Attribute based dependency injection",
     "license": "Apache-2.0",
     "require": {

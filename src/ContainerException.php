@@ -13,6 +13,11 @@ class ContainerException extends \Exception
     }
 
 
+    public static function paramIncorrectType(string $paramName): ContainerException
+    {
+        return new ContainerException("Parameter $paramName incorrect type");
+    }
+
     public static function propertyRequiresType(string $propertyName): ContainerException
     {
         return new ContainerException("Property $propertyName requires a type.");

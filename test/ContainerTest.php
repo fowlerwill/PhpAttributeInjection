@@ -7,6 +7,7 @@ use FowlerWill\AttributeInjection\{
     ContainerException
 };
 use FowlerWill\AttributeInjection\Test\Fixtures\{
+    TestClassWithConstructorDependency,
     TestClassWithDependency,
     TestClassWithMissingTypeDependency,
     TestClassWithUnionTypeDependency,
@@ -66,5 +67,17 @@ class ContainerTest extends TestCase
         $this->expectException(ContainerException::class);
         $this->expectExceptionMessage("Property prop requires a single, named type.");
         $prop = $container->make(TestClassWithUnionTypeDependency::class);
+    }
+
+    public function testConstructorDependency(): void
+    {
+        $container = new Container([
+            TestDependencyInterface::class => TestDependency::class
+        ]);
+        $sut = $container
+            ->make(TestClassWithConstructorDependency::class)
+            ->getProp()
+        ;
+        $this->assertInstanceOf(TestDependency::class, $sut);
     }
 }

@@ -14,11 +14,18 @@ $dependencyMap = [
 // Pass them to the container.
 $container = new Container($dependencyMap);
 
-// Annotate your classes with #[Injected] on properties.
+// Annotate your classes with #[Injected] on properties or constructor params.
 class Main 
 {
     #[Injected]
     protected MyDependencyInterface $dependency;
+
+    protected MyOtherDependencyInterface $otherDependency;
+
+    public function __construct(MyOtherDependencyInterface $otherDependency)
+    {
+        $this->otherDependency = $otherDependency;
+    }
 }
 
 $main = $container->make(Main::class);

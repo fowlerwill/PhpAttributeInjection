@@ -2,6 +2,8 @@
 
 namespace FowlerWill\AttributeInjection;
 
+use ReflectionClass;
+
 class Container
 {
     /**
@@ -25,10 +27,16 @@ class Container
      */
     public function make(string $className)
     {
-        /** @psalm-var T */
-        $concrete = $this->instantiateClass($className);
+        $reflectedClass = InjectedReflectionClass::make($className);
 
-        foreach ($this->propertiesToInject(get_class($concrete)) as $reflectedProperty) {
+        $constructorParams = array_map(
+            [$this, 'make'], 
+            $reflectedClass->getConstructorInjectionTypeNames()
+        );
+
+        $concrete = $this->instantiateClass($className, $constructorParams);
+
+        foreach ($reflectedClass->getPropertyInjections() as $reflectedProperty) {
             $propertyClassName = $this->getPropertyClassName($reflectedProperty);
             
             $concreteReflectionProperty = new \ReflectionProperty($concrete, $reflectedProperty->getName());
@@ -42,37 +50,17 @@ class Container
     /**
      * @psalm-param class-string $className
      */
-    private function instantiateClass(string $className): object
+    private function instantiateClass(string $className, array $params): object
     {
-        /** @psalm-suppress RedundantConditionGivenDocblockType */
-        if (\class_exists($className)) {
-            return new $className();
-        }
-
-        if (\interface_exists($className) && \array_key_exists($className, $this->interfaceMap)) {
-            return new $this->interfaceMap[$className]();
-        }
-        
-        throw ContainerException::classNotExists($className);
-    }
-
-    /**
-     * @psalm-param class-string $className
-     * @return array<\ReflectionProperty>
-     */
-    private function propertiesToInject(string $className): array
-    {
-        $reflectedClass = new \ReflectionClass($className);
-
-        $properties = [];
-        
-        foreach ($reflectedClass->getProperties() as $property) {
-            if (!empty($property->getAttributes(Injected::class))) {
-                $properties[] = $property;
+        if (\interface_exists($className)) {
+            if (\array_key_exists($className, $this->interfaceMap)) {
+                return new $this->interfaceMap[$className](...$params);
+            } else {
+                throw ContainerException::classNotExists($className);
             }
         }
-
-        return $properties;
+        
+        return new $className(...$params);
     }
 
     /**
